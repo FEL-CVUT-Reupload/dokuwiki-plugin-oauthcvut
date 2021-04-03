@@ -4,4 +4,4 @@ email  coalzombik@gmail.com
 date   2021-04-03
 name   ČVUT oauth plugin
 desc   oAuth plugin to login via ČVUT account
-url    https://github.com/FEL-CVUT-Reupload/dokuwiki-plugin-oauthcvut
+url    https://github.com/felwiki/dokuwiki-plugin-oauthcvut

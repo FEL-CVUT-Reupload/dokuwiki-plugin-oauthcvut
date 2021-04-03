@@ -12,6 +12,8 @@ class auth_plugin_oauthcvut extends auth_plugin_authplain
 		parent::__construct();
 
 		$this->cando['external'] = true;
+		if ($this->get_var('logined'))
+			$this->cando['modPass'] = false;
 
 		$this->success = true;
 	}

@@ -165,19 +165,22 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 		send_redirect(wl());
 	}
 
+	private function draw_hidden_button($url, $text)
+	{
+		return '<a style="display: block; position: absolute; bottom: 0.5rem; right: 0.5rem; opacity: 0.3; font-size: 0.75rem" href="' . $url . '">' . $text . '</a></span>';
+	}
+
 	public function handle_loginform(Doku_Event &$event, $param)
 	{
-		global $conf, $ID;
+		global $ID, $INPUT;
 
 		/** @var Doku_Form $form */
 		$form = &$event->data;
-		$html = '<a href="' . wl($ID, array($this->plugin_name . '_login' => true)) . '">ČVUT Login</a>';
 
-		$form->_content = array_merge($form->_content, array(
-			form_openfieldset(array('_legend' => 'legend', 'class' => 'plugin_' . $this->plugin_name)),
-			$html,
-			form_closefieldset()
-		));
+		if ($INPUT->bool($this->plugin_name . "_basiclogin"))
+			$form->_content[] = $this->draw_hidden_button(wl($ID, array('do' => 'login')), 'Normal login');
+		else
+			$form->_content = array('<button type="button" style="margin: 1rem;" onclick="window.location.href = \'' . wl($ID, array($this->plugin_name . '_login' => true)) . '\'">ČVUT Login</button>', $this->draw_hidden_button(wl($ID, array('do' => 'login', $this->plugin_name . '_basiclogin' => true)), 'Admin login'));
 	}
 
 	public function handle_dologin(Doku_Event &$event, $param)
