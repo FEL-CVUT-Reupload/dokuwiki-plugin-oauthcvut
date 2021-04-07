@@ -12,52 +12,40 @@ class auth_plugin_oauthcvut extends auth_plugin_authplain
 		parent::__construct();
 
 		$this->cando['external'] = true;
-		if ($this->get_var('logined'))
+
+		/** @var helper_plugin_oauthcvut $helper */
+		$helper = plugin_load('helper', $this->plugin_name);
+		if ($helper->get_var('logined'))
 			$this->cando['modPass'] = false;
 
 		$this->success = true;
 	}
 
-	private function get_var($name)
-	{
-		return $_SESSION[DOKU_COOKIE][$this->plugin_name][$name];
-	}
-
-	private function set_var($name, $value)
-	{
-		return $_SESSION[DOKU_COOKIE][$this->plugin_name][$name] = $value;
-	}
-
-	private function unset_var($name)
-	{
-		unset($_SESSION[DOKU_COOKIE][$this->plugin_name][$name]);
-	}
-
-	private function get_refresh_token()
-	{
-		return $_COOKIE[DOKU_COOKIE . $this->plugin_name];
-	}
-
 	function trustExternal($user, $pass, $sticky = false)
 	{
+		/** @var helper_plugin_oauthcvut $helper */
+		$helper = plugin_load('helper', $this->plugin_name);
 		global $ID, $USERINFO, $INPUT;
 
-		if ($this->get_var('logined')) { //user logined
-			if ($this->get_var('finish_id')) {
+		if ($helper->get_var('logined')) { //user logined
+			if ($helper->get_var('finish_id')) {
 				if (!$this->processUser($_SESSION[DOKU_COOKIE][$this->plugin_name]['info'])) { // TODO: Better variable reference
 					msg('Finishing login error!', -1);
 					return false;
 				}
 
-				$url = wl($this->get_var('finish_id'));
-				$this->unset_var('finish_id');
+				$url = wl($helper->get_var('finish_id'));
+				$helper->unset_var('finish_id');
 				send_redirect($url);
 			}
 
-			$USERINFO = $this->get_var('info');
+			if ($helper->get_var('expires') <= time() && !$INPUT->has($this->plugin_name . '_renew')) // access token expired
+				$helper->refresh_token();
+
+			$USERINFO = $helper->get_var('info');
 			$_SERVER['REMOTE_USER'] = $USERINFO['user'];
 			return true;
-		} else if ($this->get_refresh_token() && !$INPUT->has($this->plugin_name . '_renew')) { //renew token
+		} else if ($helper->get_refresh_token() && !$INPUT->has($this->plugin_name . '_renew')) { //renew token
 			$url = wl($ID, array($this->plugin_name . '_renew' => true));
 			send_redirect($url);
 		}
@@ -106,6 +94,8 @@ class auth_plugin_oauthcvut extends auth_plugin_authplain
 
 	public function modifyUser($user, $changes)
 	{
+		/** @var helper_plugin_oauthcvut $helper */
+		$helper = plugin_load('helper', $this->plugin_name);
 		global $ID, $USERINFO;
 
 		$own_session = session_status() === PHP_SESSION_NONE;
@@ -113,7 +103,7 @@ class auth_plugin_oauthcvut extends auth_plugin_authplain
 		if ($own_session)
 			session_start();
 
-		$new_info = $this->get_var('info');
+		$new_info = $helper->get_var('info');
 
 		if (isset($changes['mail']))
 			$new_info['mail'] = $changes['mail'];
@@ -122,7 +112,7 @@ class auth_plugin_oauthcvut extends auth_plugin_authplain
 		if (isset($changes['grps']))
 			$new_info['grps'] = $changes['grps'];
 
-		$this->set_var('info', $new_info);
+		$helper->set_var('info', $new_info);
 		$USERINFO = $new_info;
 
 		$ok = parent::modifyUser($user, $changes);
