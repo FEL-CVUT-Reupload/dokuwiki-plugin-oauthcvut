@@ -18,7 +18,8 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 		2 => 'Pro správné zobrazení je potřeba se přihlásit přes ČVUT',
 		3 => 'Chyba při parsování dat z KOSapi',
 		4 => 'Chyba při získávání dat z KOSapi',
-		5 => 'Zadaný předmět neexistuje'
+		5 => 'Zadaný předmět neexistuje',
+		6 => 'Chyba na straně KOSapi'
 	);
 
 	public function getType()
@@ -99,9 +100,10 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 
 		if ($data->status == '400')
 			return array('type' => 'error', 'code' => 4);
-
-		if ($data->status == '404')
+		else if ($data->status == '404')
 			return array('type' => 'error', 'code' => 5);
+		else if (isset($data->status) && intval($data->status) >= 500)
+			return array('type' => 'error', 'code' => 6);
 
 		return array('type' => 'course', 'data' => $this->parse_course($data));
 	}
@@ -247,14 +249,13 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 
 		$access_token = $helper->get_var('access_token');
 		if (!$access_token)
-			return false; //TODO: array('type' => 'error', 'code' => 2);
+			return $this->render_error($renderer, 2);
 
 		$username = $helper->get_var('info')['user'];
 
 		$user_courses = $helper->http_api_get(sprintf("%s/students/%s/enrolledCourses?limit=100", $this->getConf('endpoint-kos'), $username), $access_token);
-		if (!$user_courses) {
-			return false; //TODO: Error handle
-		}
+		if (!$user_courses)
+			return $this->render_error($renderer, 6);
 
 		$user_courses = explode(',', $user_courses);
 		$index_result = idx_get_indexer()->lookupKey($this->plugin_name . '_courses', $user_courses);
@@ -283,6 +284,12 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 		return true;
 	}
 
+	private function render_error(Doku_Renderer $renderer, $code)
+	{
+		$renderer->doc .= "<b>" . $this->error_codes[$code] . "</b>";
+		return true;
+	}
+
 	public function render($mode, Doku_Renderer $renderer, $data)
 	{
 		if (!$data)
@@ -292,8 +299,7 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 			/** @var Doku_Renderer_xhtml $renderer */
 			switch ($data['type']) {
 				case 'error':
-					$renderer->doc .= "<b>" . $this->error_codes[$data['code']] . "</b>";
-					return true;
+					return $this->render_error($renderer, $data['code']);
 				case 'course_list':
 					return $this->render_course_list($renderer, $data['data']);
 				case 'course_merge':
