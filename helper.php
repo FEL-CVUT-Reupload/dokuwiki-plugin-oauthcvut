@@ -81,7 +81,7 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 		return json_decode($data_str, true);
 	}
 
-	private function __http_api_get($url, $access_token)
+	public function http_api_get($url, $access_token)
 	{
 		$curl = curl_init();
 		curl_setopt_array($curl, [
@@ -101,7 +101,7 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 
 	public function http_api_get_json($url, $access_token)
 	{
-		$data_str = $this->__http_api_get($url, $access_token);
+		$data_str = $this->http_api_get($url, $access_token);
 		if (!$data_str)
 			return null;
 		return json_decode($data_str, true);
@@ -109,7 +109,7 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 
 	public function http_api_get_xml($url, $access_token)
 	{
-		$data_str = $this->__http_api_get($url, $access_token);
+		$data_str = $this->http_api_get($url, $access_token);
 		if (!$data_str)
 			return null;
 		return simplexml_load_string($data_str);

@@ -23,6 +23,9 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 		$controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'handle_start');
 		$controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_loginform');
 		$controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'handle_dologin');
+		$controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handle_parser_cache_use');
+		$controller->register_hook('INDEXER_PAGE_ADD', 'BEFORE', $this, 'handle_indexer_page_add');
+		$controller->register_hook('INDEXER_VERSION_GET', 'BEFORE', $this, 'handle_indexer_version_get');
 	}
 
 	/**
@@ -163,5 +166,38 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 			$helper->clear_data();
 			session_write_close();
 		}
+	}
+
+	public function handle_parser_cache_use(Doku_Event $event, $param)
+	{
+		global $conf;
+		/** @var CacheRenderer $cache */
+		$cache = $event->data;
+
+		if (!isset($cache->page))
+			return;
+
+		if ($cache->mode != 'xhtml') //purge only xhtml cache
+			return;
+
+		$no_cache = p_get_metadata($cache->page, $this->plugin_name . '_nocache');
+		$error_cache = p_get_metadata($cache->page, $this->plugin_name . '_cache_erorr');
+		if (!$no_cache && !$error_cache) return;
+
+		if ($error_cache)
+			touch('conf/local.php');
+
+		$cache->depends['age'] = -1;
+	}
+
+	public function handle_indexer_page_add(Doku_Event $event, $param)
+	{
+		$courses = p_get_metadata($event->data['page'], $this->plugin_name . '_courses');
+		$event->data['metadata'][$this->plugin_name . '_courses'] = $courses;
+	}
+
+	public function handle_indexer_version_get(Doku_Event $event, $param)
+	{
+		$event->data['plugin_' . $this->plugin_name] = '1';
 	}
 }
