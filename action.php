@@ -127,6 +127,11 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 		else
 			$groups[] = $group_prefix . '-other';
 
+		// Get courses
+		$courses_url = sprintf("%s/students/%s/enrolledCourses?limit=100", $this->getConf('endpoint-kos'), $data['user_name']);
+		$courses_data = $helper->http_api_get($courses_url, $access_token);
+		$courses_data = explode(',', $courses_data);
+
 		$helper->set_var('logined', true);
 		$helper->set_var('access_token', $access_token);
 		$helper->set_var('info', array(
@@ -135,6 +140,7 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 			'mail' => $usermap_data['preferredEmail'],
 			'grps' => $groups
 		));
+		$helper->set_var('courses', $courses_data);
 
 		send_redirect(wl());
 	}

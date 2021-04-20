@@ -247,18 +247,7 @@ class syntax_plugin_oauthcvut extends DokuWiki_Syntax_Plugin
 		/** @var helper_plugin_oauthcvut $helper */
 		$helper = plugin_load('helper', $this->plugin_name);
 
-		$access_token = $helper->get_var('access_token');
-		if (!$access_token)
-			return $this->render_error($renderer, 2);
-
-		$username = $helper->get_var('info')['user'];
-
-		$user_courses = $helper->http_api_get(sprintf("%s/students/%s/enrolledCourses?limit=100", $this->getConf('endpoint-kos'), $username), $access_token);
-		if (!$user_courses)
-			return $this->render_error($renderer, 6);
-
-		$user_courses = explode(',', $user_courses);
-		$index_result = idx_get_indexer()->lookupKey($this->plugin_name . '_courses', $user_courses);
+		$index_result = idx_get_indexer()->lookupKey($this->plugin_name . '_courses', $helper->get_var('courses'));
 
 		$renderer->doc .= '<ul>';
 		foreach ($index_result as $course => $links) {
