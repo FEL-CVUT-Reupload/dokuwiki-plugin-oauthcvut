@@ -187,7 +187,7 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 			return;
 
 		$no_cache = p_get_metadata($cache->page, $this->plugin_name . '_nocache');
-		$error_cache = p_get_metadata($cache->page, $this->plugin_name . '_cache_erorr');
+		$error_cache = p_get_metadata($cache->page, $this->plugin_name . '_cache_error');
 		if (!$no_cache && !$error_cache) return;
 
 		if ($error_cache)
