@@ -81,14 +81,15 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 		return json_decode($data_str, true);
 	}
 
-	public function http_api_get($url, $access_token)
+	public function http_api_get($url, $access_token, $mime_type)
 	{
 		$curl = curl_init();
 		curl_setopt_array($curl, [
 			CURLOPT_URL => $url,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_HTTPHEADER => [
-				"Authorization: Bearer " . $access_token
+				"Authorization: Bearer " . $access_token,
+				"Accept: " . $mime_type
 			]
 		]);
 
@@ -101,7 +102,7 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 
 	public function http_api_get_json($url, $access_token)
 	{
-		$data_str = $this->http_api_get($url, $access_token);
+		$data_str = $this->http_api_get($url, $access_token, "application/json");
 		if (!$data_str)
 			return null;
 		return json_decode($data_str, true);
@@ -109,7 +110,7 @@ class helper_plugin_oauthcvut extends DokuWiki_Plugin
 
 	public function http_api_get_xml($url, $access_token)
 	{
-		$data_str = $this->http_api_get($url, $access_token);
+		$data_str = $this->http_api_get($url, $access_token, "application/xml");
 		if (!$data_str)
 			return null;
 		return simplexml_load_string($data_str);

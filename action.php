@@ -129,7 +129,7 @@ class action_plugin_oauthcvut extends DokuWiki_Action_Plugin
 
 		// Get courses
 		$courses_url = sprintf("%s/students/%s/enrolledCourses?limit=100", $this->getConf('endpoint-kos'), $data['user_name']);
-		$courses_data = $helper->http_api_get($courses_url, $access_token);
+		$courses_data = $helper->http_api_get($courses_url, $access_token, "text/plain");
 		$courses_data = explode(',', $courses_data);
 
 		$helper->set_var('logined', true);
